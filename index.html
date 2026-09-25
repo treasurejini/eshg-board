@@ -228,6 +228,12 @@ table.sum tr.extra .sg{color:var(--muted)}
     <div id="hw-up" class="panel uploader" hidden>
       <div id="hw-drop" class="drop" tabindex="0"><strong>CSV 파일을 끌어다 놓거나 클릭해서 선택</strong><br>엑셀의 <b>'활성화 불량 셀 ID'</b> 시트를 [다른 이름으로 저장 → CSV UTF-8] 또는 CSV로 저장한 파일<br>LOT · Grade · Date Recieved · Cell ID 열로 요약표를 자동으로 만듭니다</div>
       <input id="hw-file" type="file" accept=".csv,text/csv" hidden>
+      <details id="hw-paste-box" style="margin-top:10px">
+        <summary style="cursor:pointer"><b>파일 업로드가 차단되면: 엑셀에서 복사해 붙여넣기</b></summary>
+        <div class="note" style="margin:6px 0">엑셀 '활성화 불량 셀 ID' 시트에서 머리글 행(Cell ID가 있는 행)부터 끝까지 선택 → Ctrl+C → 아래 칸에 Ctrl+V → [붙여넣은 내용 사용]</div>
+        <textarea id="hw-paste" rows="6" style="width:100%;box-sizing:border-box;font:12px var(--mono);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px" placeholder="여기에 붙여넣기 (Ctrl+V)"></textarea>
+        <button id="hw-paste-use" class="btn small" style="margin-top:6px">붙여넣은 내용 사용</button>
+      </details>
       <div class="row">
         <label>업데이트 날짜<input id="hw-date" type="date"></label>
         <label style="flex:1 1 220px">메모 (선택)<input id="hw-memo" type="text" placeholder="예: 260922 Update"></label>
@@ -715,18 +721,26 @@ function bindTable(){
 
 /* ---------- 활불 upload ---------- */
 let hwPending=null;
-function hwOpen(open){ $("#hw-up").hidden=!open; if(!open){ hwPending=null; $("#hw-save").disabled=true; $("#hw-preview").textContent=""; $("#hw-file").value=""; } }
+function hwOpen(open){ $("#hw-up").hidden=!open; if(!open){ hwPending=null; $("#hw-save").disabled=true; $("#hw-preview").textContent=""; $("#hw-file").value=""; $("#hw-paste").value=""; } }
 $("#hw-add").addEventListener("click",()=>hwOpen($("#hw-up").hidden));
 $("#hw-cancel").addEventListener("click",()=>hwOpen(false));
 wireDrop("#hw-drop","#hw-file",hwPick);
 async function hwPick(file){
   if(!file) return;
   if(!/\.csv$/i.test(file.name)){ $("#hw-preview").textContent="CSV 파일만 올릴 수 있습니다. 엑셀에서 [다른 이름으로 저장 → CSV UTF-8]로 저장해주세요."; return; }
-  const text=decodeBytes(await file.arrayBuffer());
+  hwLoad(file.name, decodeBytes(await file.arrayBuffer()), true);
+}
+$("#hw-paste-use").addEventListener("click",()=>{
+  const text=$("#hw-paste").value;
+  if(!text.trim()){ $("#hw-preview").textContent="붙여넣은 내용이 없습니다."; return; }
+  hwLoad("붙여넣기_"+today().replace(/-/g,"").slice(2)+".csv", text, false);
+});
+function hwLoad(name, text, fromFile){
   const p=parseHw(text);
+  const file={name};
   hwPending={file, text, rows:p.rows.length};
-  $("#hw-date").value=dateFromName(file.name);
-  $("#hw-memo").value=(/\((\d{6}\s*Update)\)/i.exec(file.name)||[])[1]||"";
+  if(fromFile||!$("#hw-date").value) $("#hw-date").value=dateFromName(name);
+  if(fromFile) $("#hw-memo").value=(/\((\d{6}\s*Update)\)/i.exec(name)||[])[1]||"";
   $("#hw-preview").innerHTML = p.generic
     ? `<b>${esc(file.name)}</b> · ${p.rows.length}행 — 'Cell ID' 열을 찾지 못해 표로만 보여줍니다.`
     : `<b>${esc(file.name)}</b> · 불량 셀 ${p.rows.length}개, 열 ${p.cols.length}개 인식 (${p.cols.map(c=>esc(c.name)).join(", ")})`;
