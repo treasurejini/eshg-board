@@ -1,0 +1,36 @@
+rules_version = '2';
+// Firebase 콘솔 → Firestore Database → 규칙 탭에 이 내용을 그대로 붙여넣고 [게시]하세요.
+// 이메일 두 개는 firebase-config.js의 teamEmail / adminEmails와 똑같아야 합니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['admin@eshg-board.app'];
+    }
+    function isMember() {
+      return isAdmin() || (request.auth != null && request.auth.token.email == 'team@eshg-board.app');
+    }
+
+    // 분석 기준 수량·표시(marks): 팀원 누구나 수정
+    match /hwmeta/{id} {
+      allow read, write: if isMember();
+    }
+    // 활불 버전, IRS 보고서 목록: 관리자만 추가·삭제
+    match /hwal/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
+    match /irs/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
+    // 업로드한 파일 조각
+    match /blobs/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+      match /c/{part} {
+        allow read: if isMember();
+        allow write: if isAdmin();
+      }
+    }
+  }
+}
