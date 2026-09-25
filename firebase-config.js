@@ -1,11 +1,11 @@
-// Firebase 콘솔 → 프로젝트 설정 → 내 앱(웹) → "SDK 설정 및 구성"의 firebaseConfig 값을 붙여넣으세요.
+// Firebase 콘솔 → 프로젝트 설정 → 내 앱(웹) → "SDK 설정 및 구성"의 firebaseConfig 값
 // 이 값은 공개되어도 됩니다. 데이터 보호는 Firestore 보안 규칙(firestore.rules)이 담당합니다.
 window.ESHG_FIREBASE = {
   config: {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyA0nWNjERbZrNp-mrUo9ZrR2FaeuhRANNg",
+    authDomain: "hlbma-dc614.firebaseapp.com",
+    projectId: "hlbma-dc614",
+    appId: "1:1065869577024:web:0d185853b7ce98be7848a5"
   },
   // 팀원이 함께 쓰는 공용 계정 (Authentication → 사용자 추가에서 만든 이메일과 똑같이)
   teamEmail: "team@eshg-board.app",
